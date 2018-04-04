@@ -2,7 +2,7 @@
 
 #### （1）游戏对象运动的本质是什么？
 
-本质是游戏对象的坐标的改变。
+本质是游戏对象在每一帧发生了坐标和旋转度的改变。
 
 #### （2）请用三种以上的方法，实现物体的抛物线运动。（如，修改Transform属性，使用向量Vector3的方法…）
 
@@ -31,6 +31,13 @@ void Update () {
 	this.transform.Translate (new Vector3 (t, y, 0));
 }
 
+//使用Vector3的MoveTowards方法
+void Update () {
+		var x = this.transform.position.x;
+		x += Time.deltaTime;
+		var y = 4 * x - x * x;
+		this.transform.position = Vector3.MoveTowards (this.transform.position, new Vector3(x, y, 0), 10);
+}
 
 ```
 
@@ -43,6 +50,50 @@ void Update () {
 
 
 #### （3）写一个程序，实现一个完整的太阳系， 其他星球围绕太阳的转速必须不一样，且不在一个法平面上。
+
+```c#
+//挂载到每个星球上
+public class Rotate : MonoBehaviour {
+	
+	public Transform origin;  	//太阳
+	public float speedRotate;	//公转速度
+	public float speedRotateAround;		//自转速度
+	Vector3 axisRotateAround; 	//公转轴
+
+	void Start () {
+		float rx, ry, rz;			//自转轴参数
+		float rax, ray;				//公转轴参数
+      
+		speedRotateAround = Random.Range (10, 40);
+		speedRotate = Random.Range (80, 120);
+      
+		rx = Random.Range(5, 90);  
+		ry = Random.Range(5, 90); 
+		rz = Random.Range(5, 90); 
+		this.transform.Rotate (new Vector3 (rx, ry, rz));	//自转轴
+		
+		rax = Random.Range (10, 20);
+		ray = rax * Random.Range (2, 5);
+		axisRotateAround = new Vector3(rax, ray, 0);	//公转轴
+      
+      	//从太阳到行星的距离
+		float distance = Vector3.Magnitude (this.transform.position);
+      	//将行星放置到垂直于公转轴且过太阳中心的法平面
+		this.transform.position = Vector3.ClampMagnitude (new Vector3 (ray, -rax, 0), distance);
+	}  
+  
+	void Update () {  
+      	//公转
+		this.transform.RotateAround(origin.position, axisRotateAround, speedRotateAround * Time.deltaTime);  
+      	//自转
+		this.transform.Rotate (this.transform.up, speedRotate * Time.deltaTime);
+	}  
+}
+```
+
+![Week4_solar](Week4_solar.gif)
+
+
 
 ### 2、编程实践
 
@@ -66,6 +117,7 @@ void Update () {
 
 
 
+
 游戏中提及的事物：
 
 - 3个牧师
@@ -76,10 +128,10 @@ void Update () {
 
 玩家动作表：
 
-| 船已经靠岸时，且游戏角色没有移动 |
-| ---------------- |
-| 使船中的角色上岸         |
-| 使岸上的角色下船（船内未满员）  |
-| 开船               |
+| 船已经靠岸时，且游戏角色没有移动     |
+| -------------------- |
+| 使船中的角色上岸             |
+| 使船旁边的河岸上的角色下船（船内未满员） |
+| 开船                   |
 
 ​代码见Week4_game。
